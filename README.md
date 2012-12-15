@@ -26,9 +26,7 @@ Concepts
     - File extension: `.template` or `.blog_template`.
     - Place content: `{{content}}`.
     - Place partials: `{{partial: partial_name}}`.
-    
 * Partials: Contents that are common to many pages, for example sidebars, menus.
-
 * Metadata: Key-Value pairs (nesting is allowed) of strings.
   Including global metadata and per-page metadata. User defined metadata are allowed. For example:
     - `build_time`: Time the build script run.
