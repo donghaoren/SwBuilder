@@ -92,19 +92,19 @@ def Delimiter(L, R):
     regex_active = re.compile(reg_L + r" *(active|current|active-this|current-this): *([0-9a-zA-Z\-\_\.\,\/]+) *" + reg_R)
     regex_meta = re.compile(reg_L + r" *([0-9a-zA-Z\_\-\.]+) *" + reg_R)
     
-    regex_mustache = re.compile(htcomment_start + r" *mustache +([0-9a-zA-Z\-\_\.]+) *\{ *" + htcomment_end
-                                + r"(.*?)" +
-                                htcomment_start + r" *\} *mustache *" + htcomment_end, re.DOTALL)
+    regex_mustache = re.compile(htcomment_start + r"[\-]* *mustache +([0-9a-zA-Z\-\_\.]+) *\{ *"
+                                + r"(.*?)"
+                                + r" *\} *[\-]*" + htcomment_end, re.DOTALL)
 
-    regex_mustache_render = re.compile(htcomment_start + r" *mustache\-render +([0-9a-zA-Z\-\_\.]+) *\{ * " + htcomment_end
-                                + r"(.*?)" +
-                                htcomment_start + r" *\} *mustache\-render *" + htcomment_end, re.DOTALL)
+    regex_mustache_render = re.compile(htcomment_start + r"[\-]* (?:mustache\-render|render) +([0-9a-zA-Z\-\_\.]+) *\{ *"
+                                + r"(.*?)"
+                                + r" *\} *[\-]*" + htcomment_end, re.DOTALL)
     
-    regex_mustache_local = re.compile(htcomment_start + r" *mustache\-local *\{ *" + htcomment_end
-                                + r"(.*?)" +
-                                htcomment_start + r" *\} *mustache\-local *" + htcomment_end, re.DOTALL)
+    regex_mustache_local = re.compile(htcomment_start + r"[\-]* *mustache\-local *\{ *"
+                                + r"(.*?)"
+                                + r" *\} *[\-]*" + htcomment_end, re.DOTALL)
 
-    regex_mustache_render_first = re.compile(htcomment_start + r" *mustache\-render +([0-9a-zA-Z\-\_\.]+) *\{ * " + htcomment_end)
+    regex_mustache_render_first = re.compile(htcomment_start + r" *mustache\-render +([0-9a-zA-Z\-\_\.]+) *\{ *")
     regex_mustache_render_yaml_include = re.compile(reg_L + r" *yaml-include *: *([0-9a-zA-Z\ \_\-\.]+)" + reg_R)
     
     regex_yaml_info = re.compile(r"(\#\|\-{4}\-+)"
