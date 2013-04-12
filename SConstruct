@@ -156,7 +156,8 @@ Delimiter("{{", "}}")
 def resolve_includes(source):
     global regex_include
     data = ensure_unicode(source.get_text_contents(), 'utf-8')
-    data = regex_include.sub(lambda m: resolve_includes(File(m.group(1))), data)
+    sdir = os.path.dirname(str(source))
+    data = regex_include.sub(lambda m: resolve_includes(File(os.path.join(sdir, m.group(1)))), data)
     return data
 
 def include_build_function(target, source, env, minify = '', mustache = 0):
