@@ -1,19 +1,21 @@
 #!/usr/bin/python
-#
+
 # Static Website Builder
 # A simple and lightweight static website building script based on SCons.
 # Author: Donghao Ren
-
+#
+# Copyright (C) 2012 Donghao Ren
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-
+#
 # You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -79,7 +81,8 @@ delim_R = "}}"
 def Delimiter(L, R):
     global delim_L
     global delim_R
-    global regex_partial, regex_include, regex_js, regex_css, regex_ref, regex_active, regex_meta;
+    global regex_partial, regex_include, regex_js, regex_css, regex_ref, regex_active, regex_meta
+    global regex_base64
     global regex_mustache, regex_mustache_render, regex_mustache_render_first
     global regex_mustache_local
     global regex_mustache_render_yaml_include
@@ -102,7 +105,8 @@ def Delimiter(L, R):
     htcomment_end = re.escape("-->")
 
     regex_partial = re.compile(reg_L + r' *partial: *([0-9a-zA-Z\-\_\.]+) *' + reg_R)
-    regex_include = re.compile(reg_L + r' *include: *([0-9a-zA-Z\-\_\.]+) *' + reg_R)
+    regex_include = re.compile(reg_L + r' *include: *([0-9a-zA-Z\-\_\.\/]+) *' + reg_R)
+    regex_base64 = re.compile(reg_L + r' *base64: *([0-9a-zA-Z\-\_\.\/]+) *' + reg_R)
 
     regex_js = re.compile(reg_L + r" *js: *([0-9a-zA-Z\-\_\.\,\/]+) *" + reg_R)
     regex_css = re.compile(reg_L + r" *css: *([0-9a-zA-Z\-\_\.\,\/]+) *" + reg_R)
@@ -136,7 +140,7 @@ def Delimiter(L, R):
 
     regex_math = re.compile(htcomment_start + r" *(math|lmath)\: *(.*?)" + htcomment_end, re.DOTALL)
 
-    regex_lessimport = re.compile(r'\@import +\"([0-9a-zA-Z\.\-\_]+\.less)\"')
+    regex_lessimport = re.compile(r'\@import +\"([0-9a-zA-Z\.\-\_\/]+\.less)\"')
 
 def mustache_render(templ, obj):
     parsed = pystache.parse(ensure_unicode(templ, "utf-8"), delimiters = (u"[[", u"]]"))
@@ -158,10 +162,14 @@ def resolve_includes(source):
     data = ensure_unicode(source.get_text_contents(), 'utf-8')
     sdir = os.path.dirname(str(source))
     data = regex_include.sub(lambda m: resolve_includes(File(os.path.join(sdir, m.group(1)))), data)
+    def b64_encode_file(f):
+        c = open(f, "r").read()
+        return base64.b64encode(c)
+    data = regex_base64.sub(lambda m: b64_encode_file(os.path.join(sdir, m.group(1))), data)
     return data
 
 def include_build_function(target, source, env, minify = '', mustache = 0):
-    data = "";
+    data = ""
     for s in source:
         data += resolve_includes(s)
 
@@ -338,16 +346,19 @@ def include_scanner(node, env, path, parents = []):
     files = [];
     text = ensure_unicode(node.get_text_contents(), 'utf-8')
     path = os.path.dirname(node.rstr())
+    print str(node)
     if path == "":
         path = "."
-    result = regex_include.findall(text)
+    result = regex_include.findall(text) + regex_base64.findall(text)
     for inc in result:
         if inc in parents:
             raise Exception("Circular includes on '%s'." % str(node))
         files.append(path + "/" + inc)
     r = env.File(files);
     for inc in result:
-        r += include_scanner(File(path + "/" + inc), env, path, parents + [inc])
+        if os.path.splitext(inc)[1].lower()[1:] in set([
+            "html", "js", "css", "less", "md"
+        ]): r += include_scanner(File(path + "/" + inc), env, path, parents + [inc])
     return r
 
 # Substitute builder, Template + Partials + HTML = Output Page.
