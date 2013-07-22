@@ -517,7 +517,7 @@ def union_scanner(scanners):
 
 # Add our template scanner.
 env.Append(SCANNERS = Scanner(function = blog_template_scanner, skeys = ['.blog_template']))
-env.Append(SCANNERS = Scanner(function = partial_scanner, skeys = ['.compiled']))
+env.Append(SCANNERS = Scanner(function = partial_scanner, skeys = ['.compiled', '.resolved']))
 env.Append(SCANNERS = Scanner(function = include_scanner, skeys = ['.js', '.css']))
 env.Append(SCANNERS = Scanner(function = union_scanner([mustache_scanner, include_scanner, partial_scanner]),
                               skeys = ['.html', '.md']))
@@ -547,21 +547,21 @@ def read_partial_file(name):
     f = open(temp, 'r')
     content = f.read()
     f.close()
-    return content
+    return content.decode("utf-8")
 
 def read_mustache_file(name):
     temp = get_mustache_path(name)
     f = open(temp, 'r')
     content = f.read()
     f.close()
-    return content
+    return content.decode("utf-8")
 
 def read_yaml_file(name):
     temp = get_yaml_path(name)
     f = open(temp, 'r')
     content = f.read()
     f.close()
-    return content
+    return content.decode("utf-8")
 
 def get_temp_path(url):
     return "%s/%s.content" % (temporary_directory, url)
