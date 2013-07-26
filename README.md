@@ -39,15 +39,22 @@ Documentation
 To use SwBuilder, install the following dependencies first:
 
 * SCons
-* json, yaml: JSON/YAML support.
-* pystache: Mustache rendering.
-* pytz: For timezone definitions.
+* Python Modules:
+  * json, yaml: JSON/YAML support.
+  * pystache: Mustache rendering.
+  * pytz: For timezone definitions.
+  * PIL: For image manipulation.
+* Commandline Tools:
+  * LaTeX: For LaTeX rendering support.
+  * ImageMagick: For image manipulation.
+  * multimarkdown: Markdown rendering.
+  * uglifyjs, cleancss: JS/CSS minification.
 
 ### Getting Started
 
 1. Put the SConstruct file in the directory of your website sources.
    The output files will be generated in the `deploy` folder, and temporary files in the `temp` folder.
-   
+
 2. Create templates along with CSS files and Javascript files.
 
 3. Write the `WebsiteMeta` file to define your webpages.
@@ -89,18 +96,18 @@ For example a html file:
     nested:
       key: value
     }--->
-    
+
     <p>This is the page content</p>
     <!-- yields 'value' -->
     <p>{{nested.key}}</p>
-    
+
     <!-- Use {{ref: path}} to reference another file. -->
     <a href="{{ref: folder/page.html}}">link</a>
     <img src="{{ref: folder/image.png}}" />
-    
+
     <!-- Use {{js: path}} to include Javascript -->
     <script type="text/javascript" src="{{js: script.js}}"></script>
- 
+
 Use `<!--{ yaml contents }-->` to define YAML metadata for the page, it can be referred from the page or the templates.
 
 If your website is not directly under a domain, it's difficult to reference pages from a template.
