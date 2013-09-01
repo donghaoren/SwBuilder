@@ -57,7 +57,7 @@ To use SwBuilder, install the following dependencies first:
 
 2. Create templates along with CSS files and Javascript files.
 
-3. Write the `WebsiteMeta` file to define your webpages.
+3. Write the `SConstruct` file to define your webpages.
    Remember that this is a python file, so feel free to use other python expressions to ease your configuration.
 
 4. Run `scons` to build your website.
@@ -114,7 +114,12 @@ If your website is not directly under a domain, it's difficult to reference page
 Static Website Builder provides a useful `{{ref: path}}` directive, as well as `{{js: path}}`, they will be replaced with
 the actual path (relative to current page) in the build process. For example, `{{ref: a.html}}` will be replaced as `a.html` in `b.html`, but `../a.html` in `folder/b.html`.
 
-### WebsiteMeta
+### SConstruct
+
+First you should import SwBuilder. It is required to use `execfile()`, because we need to define builders to SCons's environment.
+
+    import SwBuilder.initialize
+    execfile(SwBuilder.initialize.execpath)
 
 Note that the targets files are relative to the `deploy` folder.
 
