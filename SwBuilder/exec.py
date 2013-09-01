@@ -1023,3 +1023,11 @@ def LaTeXPNGDataURL(latex_input, env):
         return get_png_dataurl(png_output)
     else:
         raise Exception("LaTeX Failed!")
+
+from SwBuilder.iconfont import CreateIconFont
+
+def iconfont_build_function(target, source, env):
+    t = str(target[0])
+    s = [ str(x) for x in source ]
+    CreateIconFont(env["name"], s, t)
+env.Append(BUILDERS = { "IconFont": Builder(action = iconfont_build_function) })
