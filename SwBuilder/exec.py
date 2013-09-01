@@ -129,7 +129,7 @@ def Delimiter(L, R):
                                 + r" *\} *[\-]*" + htcomment_end, re.DOTALL)
 
     regex_mustache_render_first = re.compile(htcomment_start + r" *mustache\-render +([0-9a-zA-Z\-\_\.]+) *\{ *")
-    regex_mustache_render_yaml_include = re.compile(reg_L + r" *yaml-include *: *([0-9a-zA-Z\ \_\-\.]+)" + reg_R)
+    regex_mustache_render_yaml_include = re.compile(reg_L + r" *yaml-include *: *([0-9a-zA-Z\ \_\-\.\=\,]+)" + reg_R)
 
     regex_yaml_info = re.compile(r"(\#\|\-{4}\-+)"
                                + r"(.*?)"
@@ -213,6 +213,9 @@ def include_build_function(target, source, env, minify = '', mustache = 0):
                     fn = k[0]
                     key = k[1]
                     obj = yaml.load(read_yaml_file(fn))
+                    if len(k) == 3:
+                        filter_def = k[2]
+                        obj = filter(lambda o: list([ o[kv.split("=")[0]] == kv.split("=")[1] for kv in filter_def.split(",") ]).count(True) >= 1, obj)
                     dict = { };
                     dict[key] = obj
                     return yaml.dump(dict);
@@ -517,7 +520,7 @@ def union_scanner(scanners):
 
 # Add our template scanner.
 env.Append(SCANNERS = Scanner(function = blog_template_scanner, skeys = ['.blog_template']))
-env.Append(SCANNERS = Scanner(function = partial_scanner, skeys = ['.compiled', '.resolved']))
+env.Append(SCANNERS = Scanner(function = partial_scanner, skeys = ['.compiled']))
 env.Append(SCANNERS = Scanner(function = include_scanner, skeys = ['.js', '.css']))
 env.Append(SCANNERS = Scanner(function = union_scanner([mustache_scanner, include_scanner, partial_scanner]),
                               skeys = ['.html', '.md']))
@@ -1020,6 +1023,3 @@ def LaTeXPNGDataURL(latex_input, env):
         return get_png_dataurl(png_output)
     else:
         raise Exception("LaTeX Failed!")
-
-# Load Website metadata.
-execfile("WebsiteMeta")
