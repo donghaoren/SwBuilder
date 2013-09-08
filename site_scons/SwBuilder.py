@@ -25,6 +25,7 @@
 #  PIL
 #  uglifyjs
 #  cleancss
+from SCons.Script import *
 
 import re
 import os
@@ -1024,7 +1025,7 @@ def LaTeXPNGDataURL(latex_input, env):
     else:
         raise Exception("LaTeX Failed!")
 
-from SwBuilder.iconfont import CreateIconFont
+from iconfont import CreateIconFont
 
 def iconfont_build_function(target, source, env):
     t = str(target[0])
