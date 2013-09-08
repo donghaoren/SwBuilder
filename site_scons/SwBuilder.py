@@ -42,7 +42,6 @@ from hashlib import sha1
 from datetime import datetime
 from shutil import copyfile
 import base64
-from PIL import Image as PILImage
 
 # Minify JS and CSS or not.
 option_minify = ARGUMENTS.get('minify', 'true')
@@ -983,6 +982,7 @@ def LaTeXPNGDataURL(latex_input, env):
     png_output = "%s/math/%s.png" % (temporary_directory, code)
 
     def get_png_dataurl(path):
+        from PIL import Image as PILImage
         im = PILImage.open(path)
         size = im.size
         f = open(path, "r")
