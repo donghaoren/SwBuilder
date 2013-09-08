@@ -50,6 +50,8 @@ To use SwBuilder, install the following dependencies first:
   * multimarkdown: Markdown rendering.
   * uglifyjs, cleancss: JS/CSS minification.
 
+Not all the dependencies are required, it depends on what feature you use.
+
 ### Getting Started
 
 1. Put the SConstruct file in the directory of your website sources.
@@ -116,10 +118,10 @@ the actual path (relative to current page) in the build process. For example, `{
 
 ### SConstruct
 
-First you should import SwBuilder. It is required to use `execfile()`, because we need to define builders to SCons's environment.
+First you should import SwBuilder. Copy `site_scons` to your project,
+and write the following code at the beginning of your SConstruct.
 
-    import SwBuilder.initialize
-    execfile(SwBuilder.initialize.execpath)
+    from SwBuilder import *
 
 Note that the targets files are relative to the `deploy` folder.
 
@@ -149,3 +151,59 @@ Define a concatenated and minified Javascript/CSS file:
     CSS("target.css", ["source1.css", "source2.css"])
 
 ### Blog Support
+
+To define blog posts, first call BlogInit:
+
+    BlogInit("blog") # Desired blog directory: 'blog'
+
+Then, pass definition of tags as an yaml:
+
+    - name: Tag Display Name
+      key: tag_key
+
+Call BlogTags to load the yaml:
+
+    BlogTags("blog/tags.yaml")
+
+Then call BlogPost to add blog posts:
+
+    BlogPost("blog/article.md")
+    # Use FindFiles to add all matched files conveniently.
+    SourceList(BlogPost, FindFiles("blog/*.md"))
+
+Each blog post should contain yaml metadata as follows:
+
+    title: Blog Title
+    blog:
+        permlink: permanent-link-of-the-blog
+        summary: short summary, not required.
+        date: 2009-01-01 10:12:14 Asia/Shanghai
+        tags: [ tag1, tah2 ]
+
+Next, you may add images for blog:
+
+    TargetList(Image, "blog/images", Find("*.jpg", "blog/images"))
+    TargetList(Image, "blog/images", Find("*.png", "blog/images"))
+
+Call BlogFinalize when all the article files are added.
+
+    BlogFinalize()
+
+Finally, generate articles and lists:
+
+    # Generate articles with given template:
+    BlogGenerateArticles("template.blog_template")
+
+    # Generate article list with given template and list template.
+    # Mustache templated should be used in blog/index.html to render lists.
+    BlogGenerateList("blog/index.html", "template.blog_template")
+    BlogGenerateTags("blog/index.html", "template.blog_template")
+
+### Math Support
+
+Use HTML comments to create math formulas:
+
+<div data-hljs-lang="none"></div>
+
+    <!-- math: latex_code -->: in a $ ... $ environment.
+    <!-- lmath: latex_code --> : in a displaymath environment.
