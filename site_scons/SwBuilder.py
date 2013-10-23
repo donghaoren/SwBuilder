@@ -324,6 +324,24 @@ def yaml2json_build_function(target, source, env):
 
 yaml2json_builder = Builder(action = yaml2json_build_function)
 
+# YAML to Data Javascript builder
+def yaml2datajs_build_function(target, source, env):
+    data = "";
+    for s in source:
+        data += ensure_unicode(s.get_text_contents(), 'utf-8') + u"\n"
+
+    obj = yaml.load(data)
+
+    data = env['variable'] + " = " + json.dumps(obj) + ";"
+
+    for t in target:
+        f = open(str(t), 'w')
+        f.write(data.encode('utf-8'))
+        f.close()
+    return None
+
+yaml2datajs_builder = Builder(action = yaml2datajs_build_function)
+
 # Scan for partials, make them dependencies.
 def partial_scanner(node, env, path):
     files = [];
@@ -445,7 +463,8 @@ def html_build_function(target, source, env):
     local_meta = {
         'title': env['SWB_title'],
         'pageurl': env['SWB_url'],
-        'extra': env['SWB_extra']
+        'extra': env['SWB_extra'],
+        'source': env['SWB_source']
     }
 
     data = regex_yaml_info.sub(lambda m: meta_enrich(m.group(2), local_meta), data)
@@ -461,10 +480,10 @@ def html_build_function(target, source, env):
 
     for t in target:
         fn = str(t);
-
-        html = regex_js.sub(lambda m: make_relative_path(fn, m.group(1)), data)
-        html = regex_css.sub(lambda m: make_relative_path(fn, m.group(1)), html)
-        html = regex_ref.sub(lambda m: strip_html(make_relative_path(fn, m.group(1))), html)
+        original_source = local_meta['source']
+        html = regex_js.sub(lambda m: make_relative_path(fn, m.group(1), source_path = original_source), data)
+        html = regex_css.sub(lambda m: make_relative_path(fn, m.group(1), source_path = original_source), html)
+        html = regex_ref.sub(lambda m: strip_html(make_relative_path(fn, m.group(1), source_path = original_source)), html)
         html = regex_active.sub(lambda m: active_page(env['SWB_url'], m.group(2), m.group(1)), html)
 
         html = html.replace(delim_L + "L" + delim_R, delim_L)
@@ -500,6 +519,7 @@ env = Environment(
         'ResolveIncludes' : include_builder,
         'BibTex2YAML': BibTex2YAML_builder,
         'YAML2JSON' : yaml2json_builder,
+        'YAML2DATAJS' : yaml2datajs_builder,
         'LessCSS' : lesscss_builder
     },
     ENV = {'PATH' : os.environ['PATH']}
@@ -581,11 +601,15 @@ def content_html(target, source):
         env.ResolveIncludes(temp, source)
         env.Markdown(target, temp)
 
-def make_relative_path(html_path, file_path):
+def make_relative_path(html_path, file_path, source_path = None):
     prefix = output_directory + "/"
     if 'this_directory' in globals():
         prefix = this_directory + "/" + prefix
     html_path = html_path.replace(prefix, "")
+    if source_path != None:
+        if file_path[0:2] == './' or file_path[0:3] == '../':
+            # relative path.
+            return os.path.relpath(os.path.join(os.path.dirname(source_path), file_path), os.path.dirname(html_path))
     return os.path.relpath(file_path, os.path.dirname(html_path))
 
 def meta_substitute(meta_name, original, metadict):
@@ -639,7 +663,7 @@ def Page(url, source, template, title = '', extra = {}):
     temp = "%s/%s.compiled" % (temporary_directory, url)
     output = "%s/%s" % (output_directory, url)
     env.Substitute(temp, [ temp_name, template ])
-    env.HTML(output, temp, SWB_title = title, SWB_url = url, SWB_extra = extra)
+    env.HTML(output, temp, SWB_title = title, SWB_url = url, SWB_extra = extra, SWB_source = source)
     append_target(output)
 
 # Add pure HTML file, just expand metadata.
@@ -649,13 +673,13 @@ def HTML(url, source, title = '', extra = {}):
     if extension == 'html':
         temp = "%s/%s.resolved" % (temporary_directory, url)
         env.ResolveIncludes(temp, source)
-        env.HTML(output, temp, SWB_title = title, SWB_url = url, SWB_extra = extra)
+        env.HTML(output, temp, SWB_title = title, SWB_url = url, SWB_extra = extra, SWB_source = source)
     else:
         temp_r = "%s/%s.resolved" % (temporary_directory, url)
         temp_c = "%s/%s.compiled" % (temporary_directory, url)
         env.ResolveIncludes(temp_r, source)
         env.Markdown(temp_c, temp_r)
-        env.HTML(output, temp_c, SWB_title = title, SWB_url = url, SWB_extra = extra)
+        env.HTML(output, temp_c, SWB_title = title, SWB_url = url, SWB_extra = extra, SWB_source = source)
     append_target(output)
 
 # Add Javascript, source can be multiple files.
@@ -703,6 +727,11 @@ def ImageMagick(url, source, args = ""):
 def YAML2JSON(url, source):
     output = "%s/%s" % (output_directory, url)
     env.YAML2JSON(output, source)
+    append_target(output)
+
+def YAML2DataJavascript(url, source, variable = "DATA"):
+    output = "%s/%s" % (output_directory, url)
+    env.YAML2DATAJS(output, source, variable = variable)
     append_target(output)
 
 def Images(url_path, list):
